@@ -1,0 +1,474 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-revolut" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="alert alert-info">{{ text_welcome }}</div>
+    {% if error_webhook_not_setup %}
+    <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_webhook_not_setup }}</div>
+    {% endif %}
+    {% if error_order_statuses %}
+    <div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i> {{ error_order_statuses }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-revolut" class="form-horizontal">
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
+            <li><a href="#tab-style" data-toggle="tab">{{ tab_widget_style }}</a></li>
+            <li><a href="#tab-status" data-toggle="tab">{{ tab_order_status }}</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane active" id="tab-general">
+              <div class="form-group required">
+                <label class="col-sm-2 control-label" for="entry-email">{{ entry_api_key }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="payment_revolut_api_key" value="{{ payment_revolut_api_key }}" placeholder="{{ entry_api_key }}" id="entry-api-key" class="form-control" />
+                  {% if error_api_key %}
+                  <div class="text-danger">{{ error_api_key }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-live-test"><span data-toggle="tooltip" title="{{ help_test }}">{{ entry_test }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_test" id="input-live-test" class="form-control">
+                    {% if payment_revolut_test %}
+                    <option value="1" selected="selected">{{ text_yes }}</option>
+                    <option value="0">{{ text_no }}</option>
+                    {% else %}
+                    <option value="1">{{ text_yes }}</option>
+                    <option value="0" selected="selected">{{ text_no }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-payment-title"><span data-toggle="tooltip" title="{{ help_payment_title }}">{{ entry_payment_title }}</span></label>
+                <div class="col-sm-10">
+                  <input type="text" name="payment_revolut_payment_title" value="{{ payment_revolut_payment_title }}" placeholder="{{ entry_payment_title }}" id="entry-payment-title" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-capture-mode"><span data-toggle="tooltip" title="{{ help_capture_mode }}">{{ entry_capture_mode }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_capture_mode" id="input-capture-mode" class="form-control">
+                    {% if payment_revolut_capture_mode == 'AUTOMATIC' %}
+                    <option value="AUTOMATIC" selected="selected">{{ text_automatic }}</option>
+                    {% else %}
+                    <option value="AUTOMATIC">{{ text_automatic }}</option>
+                    {% endif %}
+                    {% if payment_revolut_capture_mode == 'MANUAL' %}
+                    <option value="MANUAL" selected="selected">{{ text_manual }}</option>
+                    {% else %}
+                    <option value="MANUAL">{{ text_manual }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"{{ revolut_capture_mode == 'MANUAL' ? '' : ' style="display:none;"' }}>
+                <label class="col-sm-2 control-label" for="input-capture-status"><span data-toggle="tooltip" title="{{ help_capture_status }}">{{ entry_capture_status }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_capture_status_id" id="input-capture-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id == payment_revolut_capture_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-total"><span data-toggle="tooltip" title="{{ help_total }}">{{ entry_total }}</span></label>
+                <div class="col-sm-10">
+                  <input type="text" name="payment_revolut_total" value="{{ payment_revolut_total }}" placeholder="{{ entry_total }}" id="input-total" class="form-control"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-geo-zone">{{ entry_geo_zone }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_geo_zone_id" id="input-geo-zone" class="form-control">
+                    <option value="0">{{ text_all_zones }}</option>
+                    {% for geo_zone in geo_zones %}
+                    {% if geo_zone.geo_zone_id == payment_revolut_geo_zone_id %}
+                    <option value="{{ geo_zone.geo_zone_id }}" selected="selected">{{ geo_zone.name }}</option>
+                    {% else %}
+                    <option value="{{ geo_zone.geo_zone_id }}">{{ geo_zone.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_status" id="input-status" class="form-control">
+                    {% if payment_revolut_status %}
+                    <option value="1" selected="selected">{{ text_enabled }}</option>
+                    <option value="0">{{ text_disabled }}</option>
+                    {% else %}
+                    <option value="1">{{ text_enabled }}</option>
+                    <option value="0" selected="selected">{{ text_disabled }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              {% if show_webhook_button %}
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="button-{{ webhook_id ? 'delete' : 'setup' }}-webhook"><span data-toggle="tooltip" title="{{ help_webhook }}">{{ entry_webhook }}</span></label>
+                <div class="col-sm-10">
+                  {% if webhook_id %}
+                  <button type="button" id="button-delete-webhook" onclick="deleteWebhook();" class="btn btn-primary btn-lg">{{ button_delete }}</button>
+                  {% else %}
+                  <button type="button" id="button-setup-webhook" onclick="setupWebhook();" class="btn btn-primary btn-lg">{{ button_setup }}</button>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="payment_revolut_sort_order" value="{{ payment_revolut_sort_order }}" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control"/>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-style">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-payment-view"><span data-toggle="tooltip" title="{{ help_payment_view }}">{{ entry_payment_view }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_payment_view" id="input-payment-view" class="form-control">
+                    {% if payment_revolut_payment_view == '0' %}
+                    <option value="0" selected="selected">{{ text_card_field }}</option>
+                    {% else %}
+                    <option value="0">{{ text_card_field }}</option>
+                    {% endif %}
+                    {% if payment_revolut_payment_view == '1' %}
+                    <option value="1" selected="selected">{{ text_popup }}</option>
+                    {% else %}
+                    <option value="1">{{ text_popup }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-customise"><span data-toggle="tooltip" title="{{ help_customise }}">{{ entry_customise }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_customise" id="input-customise" class="form-control">
+                    {% if payment_revolut_customise == '0' %}
+                    <option value="0" selected="selected">{{ text_no }}</option>
+                    {% else %}
+                    <option value="0">{{ text_no }}</option>
+                    {% endif %}
+                    {% if payment_revolut_customise == '1' %}
+                    <option value="1" selected="selected">{{ text_yes }}</option>
+                    {% else %}
+                    <option value="1">{{ text_yes }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"{{ payment_revolut_customise ? '' : ' style="display:none;"' }}>
+                <label class="col-sm-2 control-label" for="input-background-colour"><span data-toggle="tooltip" title="{{ help_background_colour }}">{{ entry_background_colour }}</span></label>
+                <div class="col-sm-10">
+                  <div class="input-group">
+                    <span class="input-group-addon" id="input-background-colour-swatch">
+                      <i style="height:15px; width:15px; display:inline-block; background-color:{{ payment_revolut_background_colour }};"></i>
+                    </span>
+                    <input type="text" name="payment_revolut_background_colour" id="input-background-colour" value="{{ payment_revolut_background_colour }}" class="form-control" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-group"{{ payment_revolut_customise ? '' : ' style="display:none;"' }}>
+                <label class="col-sm-2 control-label" for="input-font-colour"><span data-toggle="tooltip" title="{{ help_font_colour }}">{{ entry_font_colour }}</span></label>
+                <div class="col-sm-10">
+                  <div class="input-group">
+                    <span class="input-group-addon" id="input-font-colour-swatch">
+                      <i style="height:15px; width:15px; display:inline-block; background-color:{{ payment_revolut_font_colour }};"></i>
+                    </span>
+                    <input type="text" name="payment_revolut_font_colour" id="input-font-colour" value="{{ payment_revolut_font_colour }}" class="form-control" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-group"{{ payment_revolut_customise ? '' : ' style="display:none;"' }}>
+                <label class="col-sm-2 control-label" for="input-logo-theme"><span data-toggle="tooltip" title="{{ help_logo_theme }}">{{ entry_logo_theme }}</span></label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_logo_theme" id="input-logo-theme" class="form-control">
+                    {% if payment_revolut_logo_theme == '#7a7a7a' %}
+                    <option value="#7a7a7a" selected="selected">{{ text_dark }}</option>
+                    {% else %}
+                    <option value="#7a7a7a">{{ text_dark }}</option>
+                    {% endif %}
+                    {% if payment_revolut_logo_theme == '#cccccc' %}
+                    <option value="#cccccc" selected="selected">{{ text_light }}</option>
+                    {% else %}
+                    <option value="#cccccc">{{ text_light }}</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"{{ payment_revolut_customise ? '' : ' style="display:none;"' }}>
+                <label class="col-sm-2 control-label" for="button-reset"><span data-toggle="tooltip" title="{{ help_reset }}">{{ entry_reset }}</span></label>
+                <div class="col-sm-10">
+                  <button type="button" id="button-reset" onclick="resetCustomisations();" class="btn btn-primary btn-lg">{{ button_reset }}</button>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab-status">
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-cancelled-status">{{ entry_cancelled_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_cancelled_status_id" id="input-cancelled-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id == payment_revolut_cancelled_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-authorised-status">{{ entry_authorised_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_authorised_status_id" id="input-completed-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id == payment_revolut_authorised_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-completed-status">{{ entry_completed_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_completed_status_id" id="input-completed-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id ==  payment_revolut_completed_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-processing-status">{{ entry_processing_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_processing_status_id" id="input-expired-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id ==  payment_revolut_processing_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-failed-status">{{ entry_failed_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_failed_status_id" id="input-failed-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id ==  payment_revolut_failed_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-pending-status">{{ entry_pending_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_pending_status_id" id="input-pending-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id ==  payment_revolut_pending_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-refunded-status">{{ entry_refunded_status }}</label>
+                <div class="col-sm-10">
+                  <select name="payment_revolut_refunded_status_id" id="input-refunded-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    {% if order_status.order_status_id ==  payment_revolut_refunded_status_id %}
+                    <option value="{{ order_status.order_status_id }}" selected="selected">{{ order_status.name }}</option>
+                    {% else %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+var customise_select = $('select[name=\'payment_revolut_customise\']');
+
+customise_select.on('change', function () {
+    if (customise_select.val() == 1) {
+        $('#input-background-colour').parent().parent().parent().show();
+        $('#input-font-colour').parent().parent().parent().show();
+        $('#input-logo-theme').parent().parent().show();
+        $('#button-reset').parent().parent().show();
+    } else {
+        $('#input-background-colour').parent().parent().parent().hide();
+        $('#input-font-colour').parent().parent().parent().hide();
+        $('#input-logo-theme').parent().parent().hide();
+        $('#button-reset').parent().parent().hide();
+    }
+});
+
+var capture_mode_select = $('select[name=\'payment_revolut_capture_mode\']');
+
+capture_mode_select.on('change', function() {
+    if (capture_mode_select.val() == 'MANUAL') {
+        $('#input-capture-status').parent().parent().show();
+    } else {
+        $('#input-capture-status').parent().parent().hide();
+    }
+});
+
+function setupWebhook() {
+    $.ajax({
+        url: 'index.php?route=extension/payment/revolut/setupWebhook&setup=1&user_token={{ user_token }}',
+        type: 'GET',
+        beforeSend: function() {
+            $('#button-setup-webhook').prop('disabled', true);
+            $('#button-setup-webhook').button('loading');
+        },
+        complete: function() {
+            $('#button-setup-webhook').prop('disabled', false);
+            $('#button-setup-webhook').button('reset');
+        },
+        success: function(json) {
+            if (json['success']) {
+                alert(json['success']);
+            } else if (json['error']) {
+                alert(json['error']);
+            }
+
+            location.reload();
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+    });
+}
+
+function deleteWebhook() {
+    $.ajax({
+        url: 'index.php?route=extension/payment/revolut/setupWebhook&delete=1&user_token={{ user_token }}',
+        type: 'GET',
+        beforeSend: function() {
+            $('#button-delete-webhook').prop('disabled', true);
+            $('#button-delete-webhook').button('loading');
+        },
+        complete: function() {
+            $('#button-delete-webhook').prop('disabled', false);
+            $('#button-delete-webhook').button('reset');
+        },
+        success: function(json) {
+            if (json['success']) {
+                alert(json['success']);
+            } else if (json['error']) {
+                alert(json['error']);
+            }
+
+            location.reload();
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+    });
+}
+
+function resetCustomisations() {
+    $('#input-background-colour').colorpicker('setValue', '#ffffff');
+    $('#input-font-colour').colorpicker('setValue', '#848484');
+    $('#input-logo-theme').val('#7a7a7a');
+}
+
+$(document).ready(function() {
+    $('#input-background-colour').colorpicker({
+        align: 'left',
+        customClass: 'colorpicker-2x',
+        sliders: {
+            saturation: {
+                maxLeft: 200,
+                maxTop: 200
+            },
+            hue: {
+                maxTop: 200
+            },
+            alpha: {
+                maxTop: 200
+            }
+        }
+    });
+
+    $('#input-font-colour').colorpicker({
+        align: 'left',
+        customClass: 'colorpicker-2x',
+        sliders: {
+            saturation: {
+                maxLeft: 200,
+                maxTop: 200
+            },
+            hue: {
+                maxTop: 200
+            },
+            alpha: {
+                maxTop: 200
+            }
+        }
+    });
+    
+    $('#input-background-colour').on('changeColor', function(event) {
+        $('#input-background-colour-swatch > i').css('background-color', event.color.toString());
+    });
+
+    $('#input-font-colour').on('changeColor', function(event) {
+        $('#input-font-colour-swatch > i').css('background-color', event.color.toString());
+    });
+});
+</script>
+{{ footer }}

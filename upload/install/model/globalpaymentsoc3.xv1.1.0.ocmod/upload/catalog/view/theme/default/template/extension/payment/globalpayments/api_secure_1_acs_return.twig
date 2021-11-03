@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base href="https://pay.sandbox.realexpayments.com:443/merchants/opencart/internet3ds2/" />
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+<link rel="stylesheet" href="/resources/css/v1/hpp.min.css" />
+<link rel="stylesheet" href="/resources/css/v1/hpp-float.min.css" />
+<link rel="stylesheet" href="/resources/css/v1/hpp-mobile.min.css" />
+<link rel="stylesheet" href="/resources/css/v1/realex.min.css" />
+<script type="text/javascript" src="/resources/libs/v1/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/resources/libs/mobile-detect.min.js"></script>
+</head>
+<body>
+<script id="realex-script" type="text/javascript">
+
+$(document).ready(function() {
+    var postToIFrame = true;
+    var originUrl = '{{ server }}';
+    var authResult = '{{ authentication_data }}';
+    var mobileDetect = new MobileDetect(window.navigator.userAgent);
+    var is_uiwebview = /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(navigator.userAgent);
+
+    if (postToIFrame) {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.callbackHandler) { // this detect IOS 9
+			// iOS 9 native app
+            window.webkit.messageHandlers.callbackHandler.postMessage(authResult, originUrl);
+        } else if (mobileDetect.os() == 'iOS' && mobileDetect.version(mobileDetect.os()) < 9) { // IOS 8 (Native app and Safari browser)
+			if (is_uiwebview == true) { // IOS 8 native app 
+                window.location.href = "callbackHandler://" + authResult;
+			} else if (window.opener) {
+            // browser new window
+                window.opener.postMessage(authResult, originUrl);
+                window.close();
+            } else {
+                // browser IFrame
+                window.parent.postMessage(authResult, originUrl);
+            }
+        } else if (window.HppManager) {
+			// Android native app
+            window.HppManager.callbackHandler(authResult, originUrl);
+        } else if (window.opener) {
+			// browser new window
+            window.opener.postMessage(authResult, originUrl);
+            window.close();
+        } else if (window.self !== window.top) {
+			// browser IFrame
+            window.parent.postMessage(authResult, originUrl);
+        } else {
+			if (document.getElementById('result-panel')) {
+                document.getElementById('result-panel').style.display='block';
+            }
+        }
+    } else {
+		//Redirected from the 3ds page, display the message
+        if (document.getElementById('result-panel')) {
+            document.getElementById('result-panel').style.display='block';
+        }
+    }
+});
+</script>
+</body>
+</html>
